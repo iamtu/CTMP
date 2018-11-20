@@ -221,7 +221,7 @@ def eval():
     rec/=itest
 
     for i in xrange(10):
-        print "Top %s pre: %0.2f %, recal %0.2f %"%((i+1)*10,pre[i]*100,rec[i]*100)
+        print "Top %s pre: %0.2f %%, recal %0.2f %%"%((i+1)*10,pre[i]*100,rec[i]*100)
 
 
 
