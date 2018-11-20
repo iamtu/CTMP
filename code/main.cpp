@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctime>
 #include "ldap.h"
+gsl_rng * RANDOM_NUMBER = NULL;
 
 void print_usage_and_exit() {
 	// print usage information
@@ -207,6 +208,7 @@ int main(int argc, char* argv[]) {
 	sprintf(filename, "%s/settings.txt", directory); 
 	ldap_param.save(filename);
 
+	RANDOM_NUMBER = new_random_number_generator(random_seed);
 	srand(random_seed);
 
 	printf("reading user matrix from %s ...\n", user_path);
@@ -230,6 +232,8 @@ int main(int argc, char* argv[]) {
 	ldap->read_init_information(theta_init_path, beta_init_path, c);
 
 	ldap->learn_map_estimate(users, items, c, &ldap_param, directory);
+	
+	free_random_number_generator(RANDOM_NUMBER);
 	
 	delete c;
 	delete ldap;
