@@ -209,7 +209,6 @@ int main(int argc, char* argv[]) {
 	ldap_param.save(filename);
 
 	RANDOM_NUMBER = new_random_number_generator(random_seed);
-	srand(random_seed);
 
 	printf("reading user matrix from %s ...\n", user_path);
 	c_data* users = new c_data(); 

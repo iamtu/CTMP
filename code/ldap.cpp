@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include "ThreadPool.h"
 
+extern gsl_rng * RANDOM_NUMBER;
+
 double CONVERGE = 1e-4; 
 int NUMBER_ITERATE_UPDATE_VARIATION_PARAM = 1;
 int NUMBER_ITERATE_OPE = 100;
@@ -331,7 +333,7 @@ void c_ldap::ope_for_theta(c_document* doc, const ldap_hyperparameter* param, in
 
   	n_f1 = 0; n_f2 = 0;
   	for (int iter = 1; iter <= NUMBER_ITERATE_OPE; iter++) {
-    	if (rand() % 2 == 0) n_f1++;
+    	if (gsl_rng_get(RANDOM_NUMBER) % 2 == 0) n_f1++;
     	else n_f2++;
 		det_f1(v_f1, v_temp, doc, d, param->alpha);
 		det_f2(v_f2, param, d);
