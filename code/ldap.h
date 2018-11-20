@@ -59,9 +59,12 @@ public:
   
     void det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d, double alpha);
   
-    void ope_for_theta(gsl_vector* v_f1 , gsl_vector* v_f2, gsl_vector* v_temp, 
-            c_document* doc, const ldap_hyperparameter* param, int d);
-  
+    void ope_for_theta(c_document* doc, const ldap_hyperparameter* param, int d);
+
+	void update_theta(const c_data* items,const c_corpus* c, const ldap_hyperparameter* param);
+
+
+
     void update_beta(vector<c_document*> m_docs);
   
     void get_eta();

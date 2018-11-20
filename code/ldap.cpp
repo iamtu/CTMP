@@ -97,6 +97,7 @@ void c_ldap::init_model(const c_data* users, const c_data* items, ldap_hyperpara
 	}
 }
 
+
 void c_ldap::learn_map_estimate(const c_data* users, const c_data* items, 
                     const c_corpus* c, const ldap_hyperparameter* param,
                     const char* directory) {
@@ -123,7 +124,6 @@ void c_ldap::learn_map_estimate(const c_data* users, const c_data* items,
   	FILE* file = fopen(name, "w");
   	fprintf(file, "iter time likelihood converge\n");
 	
-  	int* user_ids = NULL;
 	int m;
 	
 	gsl_matrix* phi = gsl_matrix_calloc(m_num_items, m_num_factors);
@@ -132,9 +132,6 @@ void c_ldap::learn_map_estimate(const c_data* users, const c_data* items,
 	gsl_matrix* delta = gsl_matrix_calloc(m_num_items, m_num_factors);
 	gsl_vector* v_eta_sum = gsl_vector_calloc(m_num_factors);
 	gsl_vector* v_sum = gsl_vector_calloc(m_num_factors);
-	gsl_vector* v_temp = gsl_vector_calloc(m_num_factors);
-	gsl_vector* v_f1 = gsl_vector_calloc(m_num_factors);
-	gsl_vector* v_f2 = gsl_vector_calloc(m_num_factors);
 
 	
 	while ((iter < param->max_iter and converge > CONVERGE)) {		
@@ -142,20 +139,9 @@ void c_ldap::learn_map_estimate(const c_data* users, const c_data* items,
 		get_eta();
 		update_muy(sum_phi, delta, v_eta_sum, items, param);
 		
-		/*
-		if (iter % 10 == 0 && iter >= 10) {
-		 	// update theta using OPE		
-		 	for (int d = 0; d < m_num_items; d++) {	
-		 		m = items->m_vec_len[d];
-		 		if (m > 0) {	
-		 			user_ids = items->m_vec_data[d];
-		 			ope_for_theta(v_f1, v_f2, v_temp, c->m_docs[d], param, d);
-		 		}				
-		 	}
-		 	// update beta
-		 	update_beta(c->m_docs);
-		}
-		*/
+		update_theta(items, c, param);
+		update_beta(c->m_docs);
+
 		iter++;	
 		time(&current);
     	elapsed = (int)difftime(current, start);
@@ -220,9 +206,6 @@ void c_ldap::learn_map_estimate(const c_data* users, const c_data* items,
 	gsl_matrix_free(delta);
 	gsl_vector_free(v_eta_sum);
 	gsl_vector_free(v_sum);
-	gsl_vector_free(v_temp);
-	gsl_vector_free(v_f1);
-	gsl_vector_free(v_f2);
 }
 
 
@@ -321,6 +304,59 @@ void c_ldap::update_muy(gsl_matrix* sum_phi, gsl_matrix* delta, gsl_vector* v_et
     return;
 }
 
+void c_ldap::update_theta(const c_data* items, const c_corpus* c, const ldap_hyperparameter* param) {
+	
+	
+	int m;
+	for (int d = 0; d < m_num_items; d++) {	
+		m = items->m_vec_len[d];
+		if (m > 0) {	
+			ope_for_theta(c->m_docs[d], param, d);
+		}				
+	}
+
+
+}
+
+void c_ldap::ope_for_theta(c_document* doc, const ldap_hyperparameter* param, int d) {
+	
+	gsl_vector* v_temp = gsl_vector_calloc(m_num_factors);
+	gsl_vector* v_f1 = gsl_vector_calloc(m_num_factors);
+	gsl_vector* v_f2 = gsl_vector_calloc(m_num_factors);
+
+
+	int n_f1 = 0, n_f2 = 0;
+  	double alpha = 0;
+	double max, temp;
+
+  	gsl_vector_view view_theta = gsl_matrix_row(m_theta, d);
+
+  	n_f1 = 0; n_f2 = 0;
+  	for (int iter = 1; iter <= NUMBER_ITERATE_OPE; iter++) {
+    	if (rand() % 2 == 0) n_f1++;
+    	else n_f2++;
+		det_f1(v_f1, v_temp, doc, d, param->alpha);
+		det_f2(v_f2, param, d);
+		
+		gsl_vector_scale(v_f1, n_f1);
+		gsl_vector_scale(v_f2, n_f2);
+
+		gsl_vector_sub(v_f1, v_f2);
+    	alpha = 2.0f/((double)iter + 2.0f);
+
+    	max = gsl_vector_max_index(v_f1);
+    	gsl_vector_scale(&view_theta.vector, 1 - alpha);
+    	vset(&view_theta.vector, max, vget(&view_theta.vector, max) + alpha);
+  	}
+  	
+  	vnormalize(&view_theta.vector);	
+	
+	gsl_vector_free(v_temp);
+	gsl_vector_free(v_f1);
+	gsl_vector_free(v_f2);
+
+    return;
+}
 
 void c_ldap::det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d, double alpha) {
 	double denominator;
@@ -357,35 +393,7 @@ void c_ldap::det_f2(gsl_vector* v_f2, const ldap_hyperparameter* param, int d) {
     return;
 }
 
-void c_ldap::ope_for_theta(gsl_vector* v_f1 , gsl_vector* v_f2, gsl_vector* v_temp, c_document* doc, 
-        const ldap_hyperparameter* param, int d) {
-	int n_f1 = 0, n_f2 = 0;
-  	double alpha = 0;
-	double max, temp;
 
-  	gsl_vector_view view_theta = gsl_matrix_row(m_theta, d);
-
-  	n_f1 = 0; n_f2 = 0;
-  	for (int iter = 1; iter <= NUMBER_ITERATE_OPE; iter++) {
-    	if (rand() % 2 == 0) n_f1++;
-    	else n_f2++;
-		det_f1(v_f1, v_temp, doc, d, param->alpha);
-		det_f2(v_f2, param, d);
-		
-		gsl_vector_scale(v_f1, n_f1);
-		gsl_vector_scale(v_f2, n_f2);
-
-		gsl_vector_sub(v_f1, v_f2);
-    	alpha = 2.0f/((double)iter + 2.0f);
-
-    	max = gsl_vector_max_index(v_f1);
-    	gsl_vector_scale(&view_theta.vector, 1 - alpha);
-    	vset(&view_theta.vector, max, vget(&view_theta.vector, max) + alpha);
-  	}
-  	
-  	vnormalize(&view_theta.vector);	
-    return;
-}
 
 void c_ldap::update_beta(vector<c_document*> m_docs) {
   	c_document* doc;
