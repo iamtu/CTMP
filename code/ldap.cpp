@@ -74,8 +74,24 @@ void c_ldap::set_model_parameters(int num_factors, int num_users, int num_items)
   	m_num_users = num_users;
   	m_num_items = num_items;
 }
+void c_ldap::init_model_from_file(){
+	char filename[500];
+	sprintf(filename, "../data_citeulike/m_eta_init.dat");
+	FILE* f = fopen(filename,"r");
+	mtx_fscanf(f, m_eta);
+	fclose(f);
 
+	sprintf(filename, "../data_citeulike/m_eta_shp_init.dat");
+	f = fopen(filename,"r");
+	mtx_fscanf(f, m_eta_shp);
+	fclose(f);
 
+	sprintf(filename, "../data_citeulike/m_eta_rte_init.dat");
+	f = fopen(filename,"r");
+	mtx_fscanf(f, m_eta_rte);
+	fclose(f);
+
+}
 void c_ldap::init_model(const c_data* users, const c_data* items, ldap_hyperparameter ldap_param) {
   	m_eta = gsl_matrix_calloc(m_num_users, m_num_factors); // eta[U][K]
 	m_eta_shp = gsl_matrix_calloc(m_num_users, m_num_factors);
@@ -94,6 +110,24 @@ void c_ldap::init_model(const c_data* users, const c_data* items, ldap_hyperpara
 			mset(m_eta_shp, i, j, ldap_param.e + 0.01 * runiform());
 	  	}	
 	}
+
+	//FIXME - hot init: m_eta, m_eta_shp, m_eta_rte to save in files. load them when start again.
+	char filename[500];
+	sprintf(filename, "../data_citeulike/m_eta_init.dat");
+	FILE* f = fopen(filename,"w");
+	mtx_fprintf(f, m_eta);
+	fclose(f);
+
+	sprintf(filename, "../data_citeulike/m_eta_shp_init.dat");
+	f = fopen(filename,"w");
+	mtx_fprintf(f, m_eta_shp);
+	fclose(f);
+
+	sprintf(filename, "../data_citeulike/m_eta_rte_init.dat");
+	f = fopen(filename,"w");
+	mtx_fprintf(f, m_eta_rte);
+	fclose(f);
+
 }
 
 

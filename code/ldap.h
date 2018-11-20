@@ -54,7 +54,7 @@ public:
                           const char* directory);
 
     void init_model(const c_data* users, const c_data* items, ldap_hyperparameter ldap_param);
-
+	void init_model_from_file();
   
     void det_f2(gsl_vector* v_f2, const ldap_hyperparameter* param, int d);
   
