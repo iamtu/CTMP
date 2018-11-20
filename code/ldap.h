@@ -10,12 +10,15 @@ struct ldap_hyperparameter {
     double f;
     double ro;
     double alpha;
+	double p;
+	int    n_threads;
     int    random_seed;
     int    max_iter;
     int    save_lag;
   
-    void set(double _e, double _f, double _ro, double _alpha, int rs, int mi, int sl) {
+    void set(double _e, double _f, double _ro, double _alpha, double _p, int _n_threads, int rs, int mi, int sl) {
         e = _e; f = _f; ro = _ro; alpha = _alpha;
+		p = _p; n_threads = _n_threads;
         random_seed = rs; max_iter = mi;
         save_lag = sl;
     }
@@ -26,6 +29,8 @@ struct ldap_hyperparameter {
         fprintf(file, "f = %.4f\n", f);
         fprintf(file, "ro = %.4f\n", ro);
         fprintf(file, "alpha = %.4f\n", alpha);
+		fprintf(file, "p = %.4f\n", p);
+		fprintf(file, "n_threads = %d\n", n_threads);
         fprintf(file, "random seed = %d\n", (int)random_seed);
         fprintf(file, "max iter = %d\n", max_iter);
         fprintf(file, "save lag = %d\n", save_lag);
@@ -50,10 +55,6 @@ public:
 
     void init_model(const c_data* users, const c_data* items, ldap_hyperparameter ldap_param);
 
-    double doc_inference(const c_document* doc, const gsl_vector* theta_v, 
-                       const gsl_matrix* log_beta, gsl_matrix* phi, 
-                       gsl_vector* gamma, gsl_matrix* word_ss, 
-                       bool update_word_ss);
   
     void det_f2(gsl_vector* v_f2, const ldap_hyperparameter* param, int d);
   
@@ -69,10 +70,7 @@ public:
   
     void get_eta();
   
-    double sum_f1(const c_data* items, const c_corpus* c);
-  
-    double update_r(gsl_matrix* U, gsl_matrix* V);
-  
+    
     void update_variational_param(gsl_matrix* eta_shp_temp, gsl_matrix* phi, gsl_matrix* sum_phi, gsl_vector* v_sum,
 									              const c_data* users, const ldap_hyperparameter* param);
   

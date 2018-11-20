@@ -5,8 +5,6 @@
 #include <ctime>
 #include "ldap.h"
 
-gsl_rng * RANDOM_NUMBER = NULL;
-
 void print_usage_and_exit() {
 	// print usage information
 	printf("*********************************LDA-Poisson models for recommendations*********************************\n");
@@ -25,6 +23,8 @@ void print_usage_and_exit() {
 	printf("      --f:              rate parameter of user vector regularizer, default 0.3\n");
 	printf("      --ro:             variance of gaussian distribution, default 1.0\n");
 	printf("      --alpha           hyperparameter of Dirichlet distribution, default 1.0\n");
+	printf("      --p       		hyperparameter of Becnoulli distribution in OPE, default 0.5\n");
+	printf("      --n_threads       number of threads to run Estep update theta, default 4\n");
 	printf("\n");
 
 	printf("      --random_seed:    the random seed, default from the current time\n");
@@ -54,7 +54,9 @@ int main(int argc, char* argv[]) {
 		{"e",      		  required_argument, NULL, 'e'},
 		{"f",      		  required_argument, NULL, 'f'},
 		{"ro",      	  required_argument, NULL, 'x'},
-		{"alpha",          required_argument, NULL, 'a'},
+		{"alpha",         required_argument, NULL, 'a'},
+		{"p",         	  required_argument, NULL, 'p'},
+		{"n_threads",     required_argument, NULL, 'n'},
 		{"random_seed",   required_argument, NULL, 'r'},
 		{"save_lag",      required_argument, NULL, 's'},
 		{"max_iter",      required_argument, NULL, 'm'},
@@ -71,6 +73,8 @@ int main(int argc, char* argv[]) {
 	char*  user_path = NULL;
 	char*  item_path = NULL;
 	float e=0.3, f=0.3, ro=1.0, alpha=1.0;
+	float p=0.5;
+	int n_threads = 4;
 	time_t t; time(&t);
 	long   random_seed = (long) t;
 	int    save_lag = 20;
@@ -103,6 +107,12 @@ int main(int argc, char* argv[]) {
 				break;
 			case 'a':
 				alpha = atof(optarg);
+				break;
+			case 'p':
+				p = atof(optarg);
+				break;
+			case 'n':
+				n_threads = atof(optarg);
 				break;
 			case 'r':
 				random_seed = atoi(optarg);
@@ -156,7 +166,9 @@ int main(int argc, char* argv[]) {
 	printf("e: %.4f\n", e);
 	printf("f: %.4f\n", f);
 	printf("ro: %.4f\n", ro);
-	printf("alpha: %4f\n", alpha);
+	printf("alpha: %.4f\n", alpha);
+	printf("p: %.4f\n", p);
+	printf("n_threads: %d\n", n_threads);
 	printf("random seed: %d\n", (int)random_seed);
 	printf("save lag: %d\n", save_lag);
 	printf("max iter: %d\n", max_iter);
@@ -191,11 +203,11 @@ int main(int argc, char* argv[]) {
 	printf("\n");
 	// save the settings
 	ldap_hyperparameter ldap_param;
-	ldap_param.set(e, f, ro, alpha, random_seed, max_iter, save_lag);
+	ldap_param.set(e, f, ro, alpha, p, n_threads, random_seed, max_iter, save_lag);
 	sprintf(filename, "%s/settings.txt", directory); 
 	ldap_param.save(filename);
 
-	RANDOM_NUMBER = new_random_number_generator(random_seed);
+	srand(random_seed);
 
 	printf("reading user matrix from %s ...\n", user_path);
 	c_data* users = new c_data(); 
@@ -218,8 +230,6 @@ int main(int argc, char* argv[]) {
 	ldap->read_init_information(theta_init_path, beta_init_path, c);
 
 	ldap->learn_map_estimate(users, items, c, &ldap_param, directory);
-
-	free_random_number_generator(RANDOM_NUMBER);
 	
 	delete c;
 	delete ldap;

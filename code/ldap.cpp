@@ -7,12 +7,9 @@
 #include <arpa/inet.h>
 #include "ThreadPool.h"
 
-extern gsl_rng * RANDOM_NUMBER;
-int min_iter = 10;
-double r = 1.0;
 double CONVERGE = 1e-4; 
 int NUMBER_ITERATE_UPDATE_VARIATION_PARAM = 1;
-int NUMBER_ITERATE_OPE = 20;
+int NUMBER_ITERATE_OPE = 100;
 int FACTOR_MUY = 1;
 
 
@@ -146,9 +143,9 @@ void c_ldap::learn_map_estimate(const c_data* users, const c_data* items,
 		time(&current);
     	elapsed = (int)difftime(current, start);
 
-    	fprintf(file, "%04d %06d\n", iter, elapsed);
+    	fprintf(file, "iter: %d - %d seconds\n", iter, elapsed);
     	fflush(file);
-    	printf("iter=%04d, time=%06d\n", iter, elapsed);
+    	printf("iter=%d, time=%d seconds\n", iter, elapsed);
 		
 		// save intermediate results
     	if (iter % param->save_lag == 0) {
@@ -306,7 +303,7 @@ void c_ldap::update_muy(gsl_matrix* sum_phi, gsl_matrix* delta, gsl_vector* v_et
 
 void c_ldap::update_theta(const c_data* items, const c_corpus* c, const ldap_hyperparameter* param) {
 	
-	ThreadPool pool(4);
+	ThreadPool pool(param->n_threads);
 	for (int d = 0; d < m_num_items; d++) {
 		pool.enqueue(
 			[&,d](){
