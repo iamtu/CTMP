@@ -1,1 +1,1 @@
-./ldap --directory=results --user=../data_citeulike/users_train.dat --item=../data_citeulike/items_train.dat --mult=../data_citeulike/mult.dat --theta_init=../data_citeulike/theta_2.dat --beta_init=../data_citeulike/beta_final.dat
+./ldap --directory=results --alpha=0.1 --user=../data_citeulike/users_train.dat --item=../data_citeulike/items_train.dat --mult=../data_citeulike/mult.dat --theta_init=../data_citeulike/theta_2.dat --beta_init=../data_citeulike/beta_final.dat

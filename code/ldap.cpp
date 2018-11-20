@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <arpa/inet.h>
-
+#include "ThreadPool.h"
 
 extern gsl_rng * RANDOM_NUMBER;
 int min_iter = 10;
@@ -306,15 +306,16 @@ void c_ldap::update_muy(gsl_matrix* sum_phi, gsl_matrix* delta, gsl_vector* v_et
 
 void c_ldap::update_theta(const c_data* items, const c_corpus* c, const ldap_hyperparameter* param) {
 	
-	
-	int m;
-	for (int d = 0; d < m_num_items; d++) {	
-		m = items->m_vec_len[d];
-		if (m > 0) {	
-			ope_for_theta(c->m_docs[d], param, d);
-		}				
+	ThreadPool pool(4);
+	for (int d = 0; d < m_num_items; d++) {
+		pool.enqueue(
+			[&,d](){
+				if (items->m_vec_len[d] > 0) {	
+					ope_for_theta(c->m_docs[d], param, d);
+				}		
+			}
+		);						
 	}
-
 
 }
 
