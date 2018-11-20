@@ -21,10 +21,8 @@ MAXTOP = 100
 pathUserTest = "../%s/users_test.dat"%dataname
 pathUserTrain = "../%s/users_train.dat"%dataname
 
-#pathFinalU = "%s/final-U.dat"%dataname
-#pathFinalV = "%s/final-V.dat"%dataname
-pathFinalU = "results/final-eta.dat"
-pathFinalV = "results/final-muy.dat"
+pathFinalU = "results/%s/final-eta.dat"%sys.argv[1]
+pathFinalV = "results/%s/final-muy.dat"%sys.argv[1]
 
 fUserTest = open(pathUserTest,"r")
 fUserTrain = open(pathUserTrain,"r")
@@ -223,7 +221,7 @@ def eval():
     rec/=itest
 
     for i in xrange(10):
-        print "Top %s pre: %s recal %s"%((i+1)*10,pre[i],rec[i])
+        print "Top %s pre: %0.2f %, recal %0.2f %"%((i+1)*10,pre[i]*100,rec[i]*100)
 
 
 
