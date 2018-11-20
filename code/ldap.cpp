@@ -75,6 +75,14 @@ void c_ldap::set_model_parameters(int num_factors, int num_users, int num_items)
   	m_num_items = num_items;
 }
 void c_ldap::init_model_from_file(){
+  	m_eta = gsl_matrix_calloc(m_num_users, m_num_factors); // eta[U][K]
+	m_eta_shp = gsl_matrix_calloc(m_num_users, m_num_factors);
+	m_eta_rte = gsl_matrix_calloc(m_num_users, m_num_factors);
+	
+  	m_muy = gsl_matrix_calloc(m_num_items, m_num_factors); // epsilon[D][K]
+	gsl_matrix_memcpy(m_muy, m_theta);
+
+
 	char filename[500];
 	sprintf(filename, "../data_citeulike/m_eta_init.dat");
 	FILE* f = fopen(filename,"r");
@@ -135,8 +143,9 @@ void c_ldap::learn_map_estimate(const c_data* users, const c_data* items,
                     const c_corpus* c, const ldap_hyperparameter* param,
                     const char* directory) {
 	// init model parameters
-  	printf("\ninitializing the model ...\n");
-  	init_model(users, items, *param);
+  	printf("\ninitializing the model from file ...\n");
+  	// init_model(users, items, *param);
+	init_model_from_file();
 	
 	printf("begin learning use MAP estimate ...\n");
 	
@@ -367,13 +376,17 @@ void c_ldap::ope_for_theta(c_document* doc, const ldap_hyperparameter* param, in
 
   	n_f1 = 0; n_f2 = 0;
   	for (int iter = 1; iter <= NUMBER_ITERATE_OPE; iter++) {
-    	if (gsl_rng_get(RANDOM_NUMBER) % 2 == 0) n_f1++;
-    	else n_f2++;
+    	if (gsl_ran_bernoulli(RANDOM_NUMBER, param->p) == 1) {
+			n_f1++;
+		} else {
+			n_f2++;
+		}
+
 		det_f1(v_f1, v_temp, doc, d, param->alpha);
 		det_f2(v_f2, param, d);
 		
-		gsl_vector_scale(v_f1, n_f1);
-		gsl_vector_scale(v_f2, n_f2);
+		gsl_vector_scale(v_f1, n_f1 * 1.0/param->p);
+		gsl_vector_scale(v_f2, n_f2 * 1.0/(1-param->p));
 
 		gsl_vector_sub(v_f1, v_f2);
     	alpha = 2.0f/((double)iter + 2.0f);

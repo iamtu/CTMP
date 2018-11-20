@@ -1,2 +1,2 @@
-./ldap --directory=results --alpha=0.1 --user=../data_citeulike/users_train.dat --item=../data_citeulike/items_train.dat --mult=../data_citeulike/mult.dat --theta_init=../data_citeulike/theta_2.dat --beta_init=../data_citeulike/beta_final.dat --n_thread=4 --p=0.01
+./ldap --directory=results --alpha=0.1 --user=../data_citeulike/users_train.dat --item=../data_citeulike/items_train.dat --mult=../data_citeulike/mult.dat --theta_init=../data_citeulike/theta_2.dat --beta_init=../data_citeulike/beta_final.dat --n_thread=4 --p=0.01 --max_iter=50 --save_lag=10
 python eval.py
