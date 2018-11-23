@@ -56,9 +56,9 @@ public:
     void init_model(const c_data* users, const c_data* items, ldap_hyperparameter ldap_param);
 	void init_model_from_file();
   
-    void det_f2(gsl_vector* v_f2, const ldap_hyperparameter* param, int d);
+    void det_f2(gsl_vector* v_f2, gsl_vector* v_temp, const ldap_hyperparameter* param, int d);
   
-    void det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d, double alpha);
+    void det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d);
   
     void ope_for_theta(c_document* doc, const ldap_hyperparameter* param, int d);
 

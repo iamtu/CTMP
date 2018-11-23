@@ -382,13 +382,13 @@ void c_ldap::ope_for_theta(c_document* doc, const ldap_hyperparameter* param, in
 			n_f2++;
 		}
 
-		det_f1(v_f1, v_temp, doc, d, param->alpha);
-		det_f2(v_f2, param, d);
+		det_f1(v_f1, v_temp, doc, d);
+		det_f2(v_f2, v_temp, param, d);
 		
 		gsl_vector_scale(v_f1, n_f1 * 1.0/param->p);
 		gsl_vector_scale(v_f2, n_f2 * 1.0/(1-param->p));
 
-		gsl_vector_sub(v_f1, v_f2);
+		gsl_vector_add(v_f1, v_f2);
     	alpha = 2.0f/((double)iter + 2.0f);
 
     	max = gsl_vector_max_index(v_f1);
@@ -405,7 +405,7 @@ void c_ldap::ope_for_theta(c_document* doc, const ldap_hyperparameter* param, in
     return;
 }
 
-void c_ldap::det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d, double alpha) {
+void c_ldap::det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d) {
 	double denominator;
 	gsl_vector_set_zero(v_f1);
 	gsl_vector_view view_beta, view_theta; 
@@ -419,25 +419,33 @@ void c_ldap::det_f1(gsl_vector* v_f1, gsl_vector* v_temp, c_document* doc, int d
 		gsl_vector_scale(v_temp, temp);
 		gsl_vector_add(v_f1, v_temp);
 	}
-	view_theta = gsl_matrix_row(m_theta, d);
-	if (alpha != 1.0) {
-		for (int k = 0; k < m_num_factors; ++k) {
-			vset(v_temp, k, ((alpha-1.0)/vget(&view_theta.vector, k)));
-		}
-		gsl_vector_add(v_f1, v_temp);
-	}
+	// view_theta = gsl_matrix_row(m_theta, d);
+	// if (alpha != 1.0) {
+	// 	for (int k = 0; k < m_num_factors; ++k) {
+	// 		vset(v_temp, k, ((alpha-1.0)/vget(&view_theta.vector, k)));
+	// 	}
+	// 	gsl_vector_add(v_f1, v_temp);
+	// }
     return;
 }
 
-void c_ldap::det_f2(gsl_vector* v_f2, const ldap_hyperparameter* param, int d) {
-	double temp = 2 * param->ro;
-
+void c_ldap::det_f2(gsl_vector* v_f2, gsl_vector* v_temp, const ldap_hyperparameter* param, int d) {
+	double temp = -2.0 * param->ro;
 	gsl_vector_view view_theta = gsl_matrix_row(m_theta, d);
 	gsl_vector_view view_muy   = gsl_matrix_row(m_muy, d);
 	gsl_vector_memcpy(v_f2, &view_theta.vector);
 	gsl_vector_sub(v_f2, &view_muy.vector);
 	gsl_vector_scale(v_f2, temp);
-    return;
+    
+	
+	view_theta = gsl_matrix_row(m_theta, d);
+	if (param->alpha != 1.0) {
+		for (int k = 0; k < m_num_factors; ++k) {
+			vset(v_temp, k, ((param->alpha-1.0)/vget(&view_theta.vector, k)));
+		}
+		gsl_vector_add(v_f2, v_temp);
+	}
+	return;
 }
 
 
