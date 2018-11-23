@@ -223,7 +223,18 @@ def eval():
     for i in xrange(10):
         print "Top %s pre: %0.2f %%, recal %0.2f %%"%((i+1)*10,pre[i]*100,rec[i]*100)
 
+	pre_str = 'pre:'
+	rec_str = 'rec:'
+	for i in xrange(10):
+		print "Top %s pre: %0.2f %%, recal %0.2f %%"%((i+1)*10,pre[i]*100,rec[i]*100)
+		pre_str += ' ' + str(pre[i]*100)
+		rec_str += ' ' + str(rec[i]*100)
 
+	with open('write_log.txt','a') as ins:
+		ins.write(str(sys.argv[1])+'\n')
+		ins.write(pre_str + '\n')
+		ins.write(rec_str + '\n')
+		
 
 eval()
 #recommend2(10)
